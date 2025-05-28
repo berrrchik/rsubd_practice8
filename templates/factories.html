@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Заводы</h1>
+        <div class="d-flex justify-content-between mb-3">
+            <a href="/factories/add" class="btn btn-success">Добавить завод</a>
+            <a href="/" class="btn btn-secondary">Назад</a>
+        </div>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Местоположение</th>
+                    <th>ID поставщика</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factory in factories %}
+                <tr>
+                    <td>{{ factory._id }}</td>
+                    <td>{{ factory.name }}</td>
+                    <td>{{ factory.location }}</td>
+                    <td>{{ factory.supplier_id }}</td>
+                    <td>
+                        <a href="/factories/delete/{{ factory._id }}" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?')">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

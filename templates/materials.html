@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Материалы</h1>
+        <div class="d-flex justify-content-between mb-3">
+            <div>
+                <a href="/materials/add" class="btn btn-success">Добавить материал</a>
+                <a href="/materials/search" class="btn btn-info">Поиск</a>
+            </div>
+            <a href="/" class="btn btn-secondary">Назад</a>
+        </div>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                <tr>
+                    <td>{{ material._id }}</td>
+                    <td>{{ material.name }}</td>
+                    <td>{{ material.description }}</td>
+                    <td>
+                        <a href="/materials/delete/{{ material._id }}" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?')">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

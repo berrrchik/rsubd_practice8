@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h1 class="mb-4">Добавить заказ</h1>
+        <form method="post">
+            <div class="mb-3">
+                <label for="material_id" class="form-label">Материал</label>
+                <select class="form-control" id="material_id" name="material_id" required>
+                    {% for material in materials %}
+                    <option value="{{ material._id }}">{{ material.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Количество</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Добавить</button>
+                <a href="/orders" class="btn btn-secondary">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

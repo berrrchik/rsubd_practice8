@@ -12,10 +12,54 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Название</th>
-                    <th>Местоположение</th>
-                    <th>ID поставщика</th>
+                    <th>
+                        <a href="{{ url_for('factories_list', sort='_id', reverse='true' if sort_by == '_id' and reverse == False else 'false') }}">
+                            ID
+                            {% if sort_by == '_id' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('factories_list', sort='name', reverse='true' if sort_by == 'name' and reverse == False else 'false') }}">
+                            Название
+                            {% if sort_by == 'name' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('factories_list', sort='location', reverse='true' if sort_by == 'location' and reverse == False else 'false') }}">
+                            Местоположение
+                            {% if sort_by == 'location' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('factories_list', sort='supplier_id', reverse='true' if sort_by == 'supplier_id' and reverse == False else 'false') }}">
+                            ID поставщика
+                            {% if sort_by == 'supplier_id' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
                     <th>Действия</th>
                 </tr>
             </thead>

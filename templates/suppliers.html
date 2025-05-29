@@ -12,9 +12,42 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Название</th>
-                    <th>Контакты</th>
+                    <th>
+                        <a href="{{ url_for('suppliers_list', sort='_id', reverse='true' if sort_by == '_id' and reverse == False else 'false') }}">
+                            ID
+                            {% if sort_by == '_id' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('suppliers_list', sort='name', reverse='true' if sort_by == 'name' and reverse == False else 'false') }}">
+                            Название
+                            {% if sort_by == 'name' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('suppliers_list', sort='contact', reverse='true' if sort_by == 'contact' and reverse == False else 'false') }}">
+                            Контакты
+                            {% if sort_by == 'contact' %}
+                                {% if reverse %}
+                                    <i class="fas fa-sort-down"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-up"></i>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
                     <th>Действия</th>
                 </tr>
             </thead>

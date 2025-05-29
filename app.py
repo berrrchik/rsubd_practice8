@@ -12,8 +12,10 @@ def index():
 # Маршруты для материалов
 @app.route('/materials')
 def materials_list():
-    materials_data = list_materials()
-    return render_template('materials.html', materials=materials_data)
+    sort_by = request.args.get('sort', '_id')
+    reverse = request.args.get('reverse', 'false') == 'true'
+    materials_data = sort_collection(materials, sort_by, reverse)
+    return render_template('materials.html', materials=materials_data, sort_by=sort_by, reverse=reverse)
 
 @app.route('/materials/add', methods=['GET', 'POST'])
 def add_material_route():
@@ -40,8 +42,10 @@ def search_materials():
 # Маршруты для заводов
 @app.route('/factories')
 def factories_list():
-    factories_data = list_factories()
-    return render_template('factories.html', factories=factories_data)
+    sort_by = request.args.get('sort', '_id')
+    reverse = request.args.get('reverse', 'false') == 'true'
+    factories_data = sort_collection(factories, sort_by, reverse)
+    return render_template('factories.html', factories=factories_data, sort_by=sort_by, reverse=reverse)
 
 @app.route('/factories/add', methods=['GET', 'POST'])
 def add_factory_route():
@@ -62,8 +66,10 @@ def delete_factory_route(factory_id):
 # Маршруты для рабочих
 @app.route('/workers')
 def workers_list():
-    workers_data = list_workers()
-    return render_template('workers.html', workers=workers_data)
+    sort_by = request.args.get('sort', '_id')
+    reverse = request.args.get('reverse', 'false') == 'true'
+    workers_data = sort_collection(workers, sort_by, reverse)
+    return render_template('workers.html', workers=workers_data, sort_by=sort_by, reverse=reverse)
 
 @app.route('/workers/add', methods=['GET', 'POST'])
 def add_worker_route():
@@ -83,8 +89,10 @@ def delete_worker_route(worker_id):
 # Маршруты для заказов
 @app.route('/orders')
 def orders_list():
-    orders_data = list_orders()
-    return render_template('orders.html', orders=orders_data)
+    sort_by = request.args.get('sort', '_id')
+    reverse = request.args.get('reverse', 'false') == 'true'
+    orders_data = sort_collection(production_orders, sort_by, reverse)
+    return render_template('orders.html', orders=orders_data, sort_by=sort_by, reverse=reverse)
 
 @app.route('/orders/add', methods=['GET', 'POST'])
 def add_order_route():
@@ -104,8 +112,10 @@ def delete_order_route(order_id):
 # Маршруты для поставщиков
 @app.route('/suppliers')
 def suppliers_list():
-    suppliers_data = list_suppliers()
-    return render_template('suppliers.html', suppliers=suppliers_data)
+    sort_by = request.args.get('sort', '_id')
+    reverse = request.args.get('reverse', 'false') == 'true'
+    suppliers_data = sort_collection(suppliers, sort_by, reverse)
+    return render_template('suppliers.html', suppliers=suppliers_data, sort_by=sort_by, reverse=reverse)
 
 @app.route('/suppliers/add', methods=['GET', 'POST'])
 def add_supplier_route():

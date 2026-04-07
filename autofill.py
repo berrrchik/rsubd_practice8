@@ -1,16 +1,15 @@
 from crud import (
-    add_material, add_factory, add_worker, 
-    add_order, add_supplier
+    add_material,
+    add_factory,
+    add_worker,
+    add_order,
+    add_supplier,
+    clear_all,
 )
 from datetime import datetime, timedelta
 
-# Очистка всех коллекций
-from models import materials, factories, workers, production_orders, suppliers
-materials.delete_many({})
-factories.delete_many({})
-workers.delete_many({})
-production_orders.delete_many({})
-suppliers.delete_many({})
+# Очистка таблиц (ранее: delete_many у коллекций MongoDB)
+clear_all()
 
 print("⚙️  Начинается автозаполнение...")
 

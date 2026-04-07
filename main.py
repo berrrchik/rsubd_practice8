@@ -1,4 +1,5 @@
 from crud import *
+from models import materials, factories, workers, production_orders, suppliers
 from pretty_print import print_materials, print_factories, print_workers, print_orders, print_suppliers, print_documents
 from datetime import datetime
 

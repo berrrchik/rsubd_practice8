@@ -1,4 +1,4 @@
-from bson.json_util import dumps
+# Ранее: from bson.json_util import dumps (MongoDB)
 
 def format_material(material):
     return f"""ID: {material['_id']}

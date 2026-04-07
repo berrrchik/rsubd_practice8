@@ -1,54 +1,249 @@
+from __future__ import annotations
 
-from models import materials, factories, workers, production_orders, suppliers
-from bson import ObjectId
+from datetime import datetime
+from types import SimpleNamespace
+
+from db_connect import get_connection
+
+# Допустимые поля сортировки (имя поля в шаблонах → колонка SQL)
+_SORT_COLUMNS = {
+    "materials": {"_id": "id", "name": "name", "description": "description"},
+    "factories": {"_id": "id", "name": "name", "location": "location", "supplier_id": "supplier_id"},
+    "workers": {"_id": "id", "name": "name", "factory_id": "factory_id"},
+    "production_orders": {
+        "_id": "id",
+        "material_id": "material_id",
+        "quantity": "quantity",
+        "order_date": "order_date",
+    },
+    "suppliers": {"_id": "id", "name": "name", "contact": "contact"},
+}
+
+
+def _row_material(r) -> dict:
+    return {"_id": r["id"], "name": r["name"], "description": r["description"] or ""}
+
+
+def _row_factory(r) -> dict:
+    return {
+        "_id": r["id"],
+        "name": r["name"],
+        "location": r["location"] or "",
+        "supplier_id": r["supplier_id"],
+    }
+
+
+def _row_worker(r) -> dict:
+    return {"_id": r["id"], "name": r["name"], "factory_id": r["factory_id"]}
+
+
+def _row_order(r) -> dict:
+    od = r["order_date"]
+    if isinstance(od, datetime):
+        od = od.isoformat()
+    return {
+        "_id": r["id"],
+        "material_id": r["material_id"],
+        "quantity": r["quantity"],
+        "order_date": od,
+    }
+
+
+def _row_supplier(r) -> dict:
+    return {"_id": r["id"], "name": r["name"], "contact": r["contact"] or ""}
+
 
 def add_material(name, description):
-    return materials.insert_one({"name": name, "description": description})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO materials (name, description) VALUES (%s, %s)",
+                (name, description),
+            )
+        conn.commit()
+        return SimpleNamespace(inserted_id=cur.lastrowid)
+
 
 def list_materials():
-    return list(materials.find())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, description FROM materials ORDER BY id")
+            rows = cur.fetchall()
+    return [_row_material(r) for r in rows]
+
 
 def delete_material(material_id):
-    return materials.delete_one({"_id": ObjectId(material_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM materials WHERE id = %s", (int(material_id),))
+        conn.commit()
+
 
 def find_material(name):
-    return list(materials.find({"name": {"$regex": name, "$options": "i"}}))
+    pattern = f"%{name}%"
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, description FROM materials WHERE LOWER(name) LIKE LOWER(%s)",
+                (pattern,),
+            )
+            rows = cur.fetchall()
+    return [_row_material(r) for r in rows]
+
 
 def add_factory(name, location, supplier_id):
-    return factories.insert_one({"name": name, "location": location, "supplier_id": ObjectId(supplier_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO factories (name, location, supplier_id) VALUES (%s, %s, %s)",
+                (name, location, int(supplier_id)),
+            )
+        conn.commit()
+        return SimpleNamespace(inserted_id=cur.lastrowid)
+
 
 def list_factories():
-    return list(factories.find())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, location, supplier_id FROM factories ORDER BY id")
+            rows = cur.fetchall()
+    return [_row_factory(r) for r in rows]
+
 
 def delete_factory(factory_id):
-    return factories.delete_one({"_id": ObjectId(factory_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM factories WHERE id = %s", (int(factory_id),))
+        conn.commit()
+
 
 def add_worker(name, factory_id):
-    return workers.insert_one({"name": name, "factory_id": ObjectId(factory_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO workers (name, factory_id) VALUES (%s, %s)",
+                (name, int(factory_id)),
+            )
+        conn.commit()
+        return SimpleNamespace(inserted_id=cur.lastrowid)
+
 
 def list_workers():
-    return list(workers.find())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, factory_id FROM workers ORDER BY id")
+            rows = cur.fetchall()
+    return [_row_worker(r) for r in rows]
+
 
 def delete_worker(worker_id):
-    return workers.delete_one({"_id": ObjectId(worker_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM workers WHERE id = %s", (int(worker_id),))
+        conn.commit()
+
 
 def add_order(material_id, quantity, order_date):
-    return production_orders.insert_one({"material_id": ObjectId(material_id), "quantity": quantity, "order_date": order_date})
+    if isinstance(order_date, datetime):
+        od = order_date.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        od = str(order_date)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO production_orders (material_id, quantity, order_date) VALUES (%s, %s, %s)",
+                (int(material_id), quantity, od),
+            )
+        conn.commit()
+        return SimpleNamespace(inserted_id=cur.lastrowid)
+
 
 def list_orders():
-    return list(production_orders.find())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, material_id, quantity, order_date FROM production_orders ORDER BY id"
+            )
+            rows = cur.fetchall()
+    return [_row_order(r) for r in rows]
+
 
 def delete_order(order_id):
-    return production_orders.delete_one({"_id": ObjectId(order_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM production_orders WHERE id = %s", (int(order_id),))
+        conn.commit()
+
 
 def add_supplier(name, contact):
-    return suppliers.insert_one({"name": name, "contact": contact})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO suppliers (name, contact) VALUES (%s, %s)",
+                (name, contact),
+            )
+        conn.commit()
+        return SimpleNamespace(inserted_id=cur.lastrowid)
+
 
 def list_suppliers():
-    return list(suppliers.find())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, contact FROM suppliers ORDER BY id")
+            rows = cur.fetchall()
+    return [_row_supplier(r) for r in rows]
+
 
 def delete_supplier(supplier_id):
-    return suppliers.delete_one({"_id": ObjectId(supplier_id)})
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM suppliers WHERE id = %s", (int(supplier_id),))
+        conn.commit()
 
-def sort_collection(collection, field, reverse=False):
-    return list(collection.find().sort(field, -1 if reverse else 1))
+
+def sort_collection(table: str, field: str, reverse=False):
+    cols = _SORT_COLUMNS.get(table)
+    if not cols:
+        return []
+    col = cols.get(field, "id")
+    order = "DESC" if reverse else "ASC"
+    # col из whitelist — безопасно для подстановки
+    if table == "materials":
+        sql = f"SELECT id, name, description FROM materials ORDER BY {col} {order}"
+        parse = _row_material
+    elif table == "factories":
+        sql = f"SELECT id, name, location, supplier_id FROM factories ORDER BY {col} {order}"
+        parse = _row_factory
+    elif table == "workers":
+        sql = f"SELECT id, name, factory_id FROM workers ORDER BY {col} {order}"
+        parse = _row_worker
+    elif table == "production_orders":
+        sql = (
+            f"SELECT id, material_id, quantity, order_date FROM production_orders "
+            f"ORDER BY {col} {order}"
+        )
+        parse = _row_order
+    elif table == "suppliers":
+        sql = f"SELECT id, name, contact FROM suppliers ORDER BY {col} {order}"
+        parse = _row_supplier
+    else:
+        return []
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+    return [parse(r) for r in rows]
+
+
+def clear_all():
+    """Очистка всех таблиц (для autofill). Порядок с учётом внешних ключей."""
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SET FOREIGN_KEY_CHECKS = 0")
+            cur.execute("TRUNCATE TABLE production_orders")
+            cur.execute("TRUNCATE TABLE workers")
+            cur.execute("TRUNCATE TABLE factories")
+            cur.execute("TRUNCATE TABLE materials")
+            cur.execute("TRUNCATE TABLE suppliers")
+            cur.execute("SET FOREIGN_KEY_CHECKS = 1")
+        conn.commit()

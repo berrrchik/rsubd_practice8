@@ -1,0 +1,16 @@
+# Автоматическая настройка дашбордов
+# Автор: Закляков Даниил Евгеньевич
+
+apiVersion: 1
+
+providers:
+  - name: "default"
+    orgId: 1
+    folder: "Cement Factory PR4 Logs"
+    folderUid: "cement-factory-pr4-folder"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

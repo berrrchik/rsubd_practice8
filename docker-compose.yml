@@ -1,38 +1,130 @@
-version: "3.8"
-
 services:
-  mongo1:
-    image: mongo:4.2
-    container_name: mongo1
-    command: ["--replSet", "my-replica-set", "--bind_ip_all"]
-    ports:
-      - "30001:27017"
+  db:
+    image: mysql:8.4
+    container_name: mysql-zaklyakovde
+    environment:
+      MYSQL_DATABASE: cement_logs_demo
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
     volumes:
-      - ./data/mongo-1:/data/db
+      - mysql_data_zaklyakovde:/var/lib/mysql
+    ports:
+      - "3306:3306"
     networks:
-      - mongo-cluster
+      - loki-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  mongo2:
-    image: mongo:4.2
-    container_name: mongo2
-    command: ["--replSet", "my-replica-set", "--bind_ip_all"]
-    ports:
-      - "30002:27017"
+  log-demo-zaklyakovde:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: log-demo-zaklyakovde
+    environment:
+      PORT: 5001
+      LOG_FILE: /var/log/app/application.log
+      FLASK_DEBUG: "false"
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: cement_logs_demo
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
     volumes:
-      - ./data/mongo-2:/data/db
+      - app_logs_zaklyakovde:/var/log/app
+    ports:
+      - "5001:5001"
     networks:
-      - mongo-cluster
+      - loki-net
+    depends_on:
+      db:
+        condition: service_healthy
+    labels:
+      logging: "promtail"
+      author: "zaklyakovde"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
-  mongo3:
-    image: mongo:4.2
-    container_name: mongo3
-    command: ["--replSet", "my-replica-set", "--bind_ip_all"]
-    ports:
-      - "30003:27017"
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki-zaklyakovde
+    user: "0"
     volumes:
-      - ./data/mongo-3:/data/db
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data_zaklyakovde:/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
-      - mongo-cluster
+      - loki-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail-zaklyakovde
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - app_logs_zaklyakovde:/var/log/app:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - loki-net
+    depends_on:
+      loki:
+        condition: service_healthy
+      log-demo-zaklyakovde:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9080/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana-zaklyakovde
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data_zaklyakovde:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - loki-net
+    depends_on:
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
 networks:
-  mongo-cluster:
+  loki-net:
+    driver: bridge
+    name: loki-network-zaklyakovde
+
+volumes:
+  mysql_data_zaklyakovde:
+    name: mysql-data-zaklyakovde
+  loki_data_zaklyakovde:
+    name: loki-data-zaklyakovde
+  grafana_data_zaklyakovde:
+    name: grafana-data-zaklyakovde
+  app_logs_zaklyakovde:
+    name: app-logs-zaklyakovde

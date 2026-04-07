@@ -1,0 +1,53 @@
+# Конфигурация Promtail (sidecar)
+# Автор: Закляков Даниил Евгеньевич
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    timeout: 10s
+    batchwait: 1s
+    batchsize: 1048576
+
+scrape_configs:
+  - job_name: cement_factory_app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: cement-factory-app
+          source: file
+          author: zaklyakovde
+          __path__: /var/log/app/*.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            module: module
+            function: function
+            method: method
+            path: path
+            status_code: status_code
+            duration_ms: duration_ms
+            request_id: request_id
+
+      - labels:
+          level:
+          method:
+          status_code:
+          author:
+
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      - output:
+          source: message

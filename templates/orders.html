@@ -36,6 +36,7 @@
                             {% endif %}
                         </a>
                     </th>
+                    <th>Название материала</th>
                     <th>
                         <a href="{{ url_for('orders_list', sort='quantity', reverse='true' if sort_by == 'quantity' and reverse == False else 'false') }}">
                             Количество
@@ -68,6 +69,7 @@
                 <tr>
                     <td>{{ order._id }}</td>
                     <td>{{ order.material_id }}</td>
+                    <td>{{ order.material_name }}</td>
                     <td>{{ order.quantity }}</td>
                     <td>{{ order.order_date }}</td>
                     <td>

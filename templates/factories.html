@@ -60,6 +60,7 @@
                             {% endif %}
                         </a>
                     </th>
+                    <th>Название поставщика</th>
                     <th>Действия</th>
                 </tr>
             </thead>
@@ -70,6 +71,7 @@
                     <td>{{ factory.name }}</td>
                     <td>{{ factory.location }}</td>
                     <td>{{ factory.supplier_id }}</td>
+                    <td>{{ factory.supplier_name }}</td>
                     <td>
                         <a href="/factories/delete/{{ factory._id }}" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?')">Удалить</a>
                     </td>

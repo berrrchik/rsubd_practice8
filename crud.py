@@ -30,11 +30,17 @@ def _row_factory(r) -> dict:
         "name": r["name"],
         "location": r["location"] or "",
         "supplier_id": r["supplier_id"],
+        "supplier_name": r.get("supplier_name") or "",
     }
 
 
 def _row_worker(r) -> dict:
-    return {"_id": r["id"], "name": r["name"], "factory_id": r["factory_id"]}
+    return {
+        "_id": r["id"],
+        "name": r["name"],
+        "factory_id": r["factory_id"],
+        "factory_name": r.get("factory_name") or "",
+    }
 
 
 def _row_order(r) -> dict:
@@ -44,6 +50,7 @@ def _row_order(r) -> dict:
     return {
         "_id": r["id"],
         "material_id": r["material_id"],
+        "material_name": r.get("material_name") or "",
         "quantity": r["quantity"],
         "order_date": od,
     }
@@ -105,7 +112,19 @@ def add_factory(name, location, supplier_id):
 def list_factories():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, name, location, supplier_id FROM factories ORDER BY id")
+            cur.execute(
+                """
+                SELECT
+                    f.id,
+                    f.name,
+                    f.location,
+                    f.supplier_id,
+                    s.name AS supplier_name
+                FROM factories f
+                LEFT JOIN suppliers s ON s.id = f.supplier_id
+                ORDER BY f.id
+                """
+            )
             rows = cur.fetchall()
     return [_row_factory(r) for r in rows]
 
@@ -131,7 +150,18 @@ def add_worker(name, factory_id):
 def list_workers():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, name, factory_id FROM workers ORDER BY id")
+            cur.execute(
+                """
+                SELECT
+                    w.id,
+                    w.name,
+                    w.factory_id,
+                    f.name AS factory_name
+                FROM workers w
+                LEFT JOIN factories f ON f.id = w.factory_id
+                ORDER BY w.id
+                """
+            )
             rows = cur.fetchall()
     return [_row_worker(r) for r in rows]
 
@@ -162,7 +192,17 @@ def list_orders():
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, material_id, quantity, order_date FROM production_orders ORDER BY id"
+                """
+                SELECT
+                    o.id,
+                    o.material_id,
+                    o.quantity,
+                    o.order_date,
+                    m.name AS material_name
+                FROM production_orders o
+                LEFT JOIN materials m ON m.id = o.material_id
+                ORDER BY o.id
+                """
             )
             rows = cur.fetchall()
     return [_row_order(r) for r in rows]
@@ -212,16 +252,42 @@ def sort_collection(table: str, field: str, reverse=False):
         sql = f"SELECT id, name, description FROM materials ORDER BY {col} {order}"
         parse = _row_material
     elif table == "factories":
-        sql = f"SELECT id, name, location, supplier_id FROM factories ORDER BY {col} {order}"
+        sql = f"""
+            SELECT
+                f.id,
+                f.name,
+                f.location,
+                f.supplier_id,
+                s.name AS supplier_name
+            FROM factories f
+            LEFT JOIN suppliers s ON s.id = f.supplier_id
+            ORDER BY f.{col} {order}
+        """
         parse = _row_factory
     elif table == "workers":
-        sql = f"SELECT id, name, factory_id FROM workers ORDER BY {col} {order}"
+        sql = f"""
+            SELECT
+                w.id,
+                w.name,
+                w.factory_id,
+                f.name AS factory_name
+            FROM workers w
+            LEFT JOIN factories f ON f.id = w.factory_id
+            ORDER BY w.{col} {order}
+        """
         parse = _row_worker
     elif table == "production_orders":
-        sql = (
-            f"SELECT id, material_id, quantity, order_date FROM production_orders "
-            f"ORDER BY {col} {order}"
-        )
+        sql = f"""
+            SELECT
+                o.id,
+                o.material_id,
+                o.quantity,
+                o.order_date,
+                m.name AS material_name
+            FROM production_orders o
+            LEFT JOIN materials m ON m.id = o.material_id
+            ORDER BY o.{col} {order}
+        """
         parse = _row_order
     elif table == "suppliers":
         sql = f"SELECT id, name, contact FROM suppliers ORDER BY {col} {order}"

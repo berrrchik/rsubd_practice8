@@ -15,5 +15,13 @@ until python -c "import pymysql; pymysql.connect(host='${MYSQL_HOST}', port=int(
     sleep 2
 done
 
+echo "Проверка, нужно ли автозаполнение базы..."
+if python -c "from db_connect import get_connection; conn=get_connection(); cur=conn.cursor(); cur.execute('SELECT COUNT(*) AS total FROM suppliers'); row=cur.fetchone(); conn.close(); raise SystemExit(0 if row['total'] == 0 else 1)"; then
+    echo "База пустая, выполняется первичное заполнение..."
+    python autofill.py
+else
+    echo "База уже содержит данные, автозаполнение пропускается."
+fi
+
 echo "Запуск Flask-приложения..."
 exec python app.py

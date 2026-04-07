@@ -1,0 +1,11 @@
+.git
+.idea
+.venv
+venv
+__pycache__
+*.pyc
+.DS_Store
+logs
+jmeter.log
+UNIVERSAL_PROMPT_PR4.md
+*.sqlite
